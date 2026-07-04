@@ -1,29 +1,26 @@
 {
   "name": "surelytrail",
   "version": "1.0.0",
-  "main": "index.ts",
+  "main": "server.ts",
+  "type": "commonjs",
+  "scripts": {
+    "start": "tsx server.ts",
+    "frontend": "npm start --prefix frontend",
+    "frontend:web": "npm run web --prefix frontend",
+    "frontend:android": "npm run android --prefix frontend",
+    "frontend:ios": "npm run ios --prefix frontend"
+  },
   "dependencies": {
-    "@expo/metro-runtime": "~56.0.15",
-    "expo": "~56.0.12",
-    "expo-status-bar": "~56.0.4",
-    "leaflet": "^1.9.4",
-    "react": "19.2.3",
-    "react-dom": "19.2.3",
-    "react-leaflet": "^5.0.0",
-    "react-native": "0.85.3",
-    "react-native-maps": "1.27.2",
-    "react-native-web": "^0.21.2"
+    "body-parser": "^2.3.0",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "mongoose": "^9.7.3"
   },
   "devDependencies": {
-    "@types/leaflet": "^1.9.21",
-    "@types/react": "~19.2.2",
+    "@types/express": "^5.0.3",
+    "@types/node": "^24.3.0",
+    "tsx": "^4.20.5",
     "typescript": "~6.0.3"
-  },
-  "scripts": {
-    "start": "expo start",
-    "android": "expo start --android",
-    "ios": "expo start --ios",
-    "web": "expo start --web"
   },
   "private": true
 }
