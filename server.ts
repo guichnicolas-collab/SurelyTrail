@@ -11,7 +11,7 @@ const MONGO_CONNECTION_STRING = process.env.MONGO_CONNECTION_STRING;
 
 if (!MONGO_CONNECTION_STRING) {
   throw new Error(
-    "MONGO_CONNECTION_STRING is not set. Add it to your .env file (see .env.sample)."
+    "MONGO_CONNECTION_STRING is not set. Add it to your .env file (see .env.sample).",
   );
 }
 
@@ -33,4 +33,4 @@ async function start() {
   });
 }
 
-start()
+start();
