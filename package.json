@@ -5,6 +5,7 @@
   "type": "commonjs",
   "scripts": {
     "start": "tsx server.ts",
+    "seed": "tsx scripts/trail-query.ts",
     "frontend": "npm start --prefix frontend",
     "frontend:web": "npm run web --prefix frontend",
     "frontend:android": "npm run android --prefix frontend",
