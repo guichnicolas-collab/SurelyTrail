@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { StyleSheet, View } from "react-native";
 import {
   MapContainer,
@@ -81,7 +81,6 @@ function TrailLine({ name, positions, isSelected, onSelect }: TrailLineProps) {
 }
 
 export default function TrailMap() {
-  const [mounted, setMounted] = useState(false);
   const [selectedTrail, setSelectedTrail] = useState<string | null>(null);
 
   const handleSelect = useCallback((name: string) => {
@@ -91,14 +90,6 @@ export default function TrailMap() {
   const handleDeselect = useCallback((name: string) => {
     setSelectedTrail((current) => (current === name ? null : current));
   }, []);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  if (!mounted) {
-    return <View style={styles.container} />;
-  }
 
   return (
     <View style={styles.container}>
