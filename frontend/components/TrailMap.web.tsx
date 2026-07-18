@@ -1,10 +1,12 @@
 import { useCallback, useState } from "react";
 import { StyleSheet, View } from "react-native";
+import { useGlobalSearchParams, router } from "expo-router";
 import {
   MapContainer,
   Polyline,
   Popup,
   TileLayer,
+  useMap,
   useMapEvents,
 } from "react-leaflet";
 import type { LatLngExpression, Polyline as LeafletPolyline } from "leaflet";
@@ -30,13 +32,43 @@ function toLeafletPositions(coords: [number, number][]): LatLngExpression[] {
   return coords.map(([lng, lat]) => [lat, lng]);
 }
 
-function PopupCloseHandler({ onDeselect }: { onDeselect: (name: string) => void }) {
+function MapEventHandler({
+  onDeselect,
+}: {
+  onDeselect: (name: string) => void;
+}) {
+  const map = useMap();
+  const params = useGlobalSearchParams<{
+    swlat?: string;
+    swlng?: string;
+    nelat?: string;
+    nelng?: string;
+  }>();
+
   useMapEvents({
     popupclose(event) {
       const source = (event.popup as { _source?: TrailPolyline })._source;
       if (source?.trailName) {
         onDeselect(source.trailName);
       }
+    },
+    moveend() {
+      const bounds = map.getBounds();
+      router.setParams({
+        swlat: bounds.getSouth(),
+        swlng: bounds.getWest(),
+        nelat: bounds.getNorth(),
+        nelng: bounds.getEast(),
+      });
+    },
+    movestart() {
+      console.log("movestart");
+    },
+    zoom() {
+      console.log("zoom");
+    },
+    resize() {
+      console.log("resize");
     },
   });
 
@@ -104,8 +136,7 @@ export default function TrailMap() {
           subdomains={WEB_TILE_SUBDOMAINS}
           maxZoom={19}
         />
-        <PopupCloseHandler onDeselect={handleDeselect} />
-
+        <MapEventHandler onDeselect={handleDeselect} />
         {geojson.features.map((feature, index) => {
           const name = feature.properties.name;
           return (
@@ -118,7 +149,6 @@ export default function TrailMap() {
             />
           );
         })}
-
       </MapContainer>
     </View>
   );
