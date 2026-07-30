@@ -28,14 +28,34 @@ const geojson = trails as TrailCollection;
 
 type TrailPolyline = LeafletPolyline & { trailName?: string };
 
+type TrailData = {
+  bounds: { north: number; south: number; east: number; west: number };
+  createdAt: string;
+  description: string;
+  difficulty: string;
+  distance: number;
+  elevationGain: number;
+  endPoint: { type: string; coordinates: number[] };
+  estimatedTime: number;
+  location: { type: string; coordinates: [number, number][] };
+  name: string;
+  source: string;
+  startPoint: { type: string; coordinates: number[] };
+  tags: string[];
+  __v: number;
+  _id: string;
+};
+
 function toLeafletPositions(coords: [number, number][]): LatLngExpression[] {
   return coords.map(([lng, lat]) => [lat, lng]);
 }
 
 function MapEventHandler({
   onDeselect,
+  onMapChange,
 }: {
   onDeselect: (name: string) => void;
+  onMapChange: (data: TrailData[]) => void;
 }) {
   const map = useMap();
   const params = useGlobalSearchParams<{
@@ -60,6 +80,18 @@ function MapEventHandler({
         nelat: bounds.getNorth(),
         nelng: bounds.getEast(),
       });
+      fetch(
+        `http://localhost:3000/queryTrails?swlat=${bounds.getSouth()}&swlng=${bounds.getWest()}&nelat=${bounds.getNorth()}&nelng=${bounds.getEast()}`,
+      )
+        .then(async (response) => {
+          if (!response.ok) {
+            console.log(await response.text());
+          }
+          return response.json();
+        })
+        .then((data) => {
+          onMapChange(data);
+        });
     },
     movestart() {
       console.log("movestart");
@@ -114,6 +146,7 @@ function TrailLine({ name, positions, isSelected, onSelect }: TrailLineProps) {
 
 export default function TrailMap() {
   const [selectedTrail, setSelectedTrail] = useState<string | null>(null);
+  const [trailData, setTrailData] = useState<TrailData[] | null>(null);
 
   const handleSelect = useCallback((name: string) => {
     setSelectedTrail(name);
@@ -121,6 +154,10 @@ export default function TrailMap() {
 
   const handleDeselect = useCallback((name: string) => {
     setSelectedTrail((current) => (current === name ? null : current));
+  }, []);
+
+  const onMapChange = useCallback((data: TrailData[]) => {
+    setTrailData(data);
   }, []);
 
   return (
@@ -136,14 +173,17 @@ export default function TrailMap() {
           subdomains={WEB_TILE_SUBDOMAINS}
           maxZoom={19}
         />
-        <MapEventHandler onDeselect={handleDeselect} />
-        {geojson.features.map((feature, index) => {
-          const name = feature.properties.name;
+        <MapEventHandler
+          onDeselect={handleDeselect}
+          onMapChange={onMapChange}
+        />
+        {trailData?.map((trail, index) => {
+          const name = trail.name;
           return (
             <TrailLine
               key={`${name}-${index}`}
               name={name}
-              positions={toLeafletPositions(feature.geometry.coordinates)}
+              positions={toLeafletPositions(trail.location.coordinates)}
               isSelected={name === selectedTrail}
               onSelect={handleSelect}
             />
