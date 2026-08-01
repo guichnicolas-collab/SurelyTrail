@@ -1,6 +1,6 @@
-import { useCallback, useState } from "react";
+import { useCallback, useState, useEffect } from "react";
 import { StyleSheet, View } from "react-native";
-import { useGlobalSearchParams, router } from "expo-router";
+import { router, useGlobalSearchParams } from "expo-router";
 import {
   MapContainer,
   Polyline,
@@ -21,10 +21,6 @@ import {
   WEB_TILE_SUBDOMAINS,
   WEB_TILE_URL,
 } from "../constants/map";
-import trails from "../trails.json";
-import type { TrailCollection } from "../types/geojson";
-
-const geojson = trails as TrailCollection;
 
 type TrailPolyline = LeafletPolyline & { trailName?: string };
 
@@ -59,11 +55,46 @@ function MapEventHandler({
 }) {
   const map = useMap();
   const params = useGlobalSearchParams<{
-    swlat?: string;
-    swlng?: string;
-    nelat?: string;
-    nelng?: string;
+    swlng: string;
+    swlat: string;
+    nelng: string;
+    nelat: string;
   }>();
+  console.log("on load:", params);
+
+  const queryTrails = useCallback(() => {
+    const bounds = map.getBounds();
+
+    router.setParams({
+      swlat: bounds.getSouth(),
+      swlng: bounds.getWest(),
+      nelat: bounds.getNorth(),
+      nelng: bounds.getEast(),
+    });
+    fetch(
+      `http://localhost:3000/queryTrails?swlat=${bounds.getSouth()}&swlng=${bounds.getWest()}&nelat=${bounds.getNorth()}&nelng=${bounds.getEast()}`,
+    )
+      .then(async (response) => {
+        if (!response.ok) {
+          console.log(await response.text());
+        }
+        return response.json();
+      })
+      .then((data) => {
+        onMapChange(data);
+      });
+  }, [map, onMapChange]);
+
+  useEffect(() => {
+    queryTrails();
+  }, [map, onMapChange, queryTrails]);
+
+  useEffect(() => {
+    map.fitBounds([
+      [+params.swlat, +params.swlng],
+      [+params.nelat, +params.nelng],
+    ]);
+  }, [map, params.nelat, params.nelng, params.swlat, params.swlng]);
 
   useMapEvents({
     popupclose(event) {
@@ -73,34 +104,16 @@ function MapEventHandler({
       }
     },
     moveend() {
-      const bounds = map.getBounds();
-      router.setParams({
-        swlat: bounds.getSouth(),
-        swlng: bounds.getWest(),
-        nelat: bounds.getNorth(),
-        nelng: bounds.getEast(),
-      });
-      fetch(
-        `http://localhost:3000/queryTrails?swlat=${bounds.getSouth()}&swlng=${bounds.getWest()}&nelat=${bounds.getNorth()}&nelng=${bounds.getEast()}`,
-      )
-        .then(async (response) => {
-          if (!response.ok) {
-            console.log(await response.text());
-          }
-          return response.json();
-        })
-        .then((data) => {
-          onMapChange(data);
-        });
+      queryTrails();
     },
     movestart() {
       console.log("movestart");
     },
     zoom() {
-      console.log("zoom");
+      queryTrails();
     },
     resize() {
-      console.log("resize");
+      queryTrails();
     },
   });
 
