@@ -20,6 +20,7 @@ const mongoUri = MONGO_CONNECTION_STRING;
 const app = express();
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
+app.use(express.static(__dirname + "/frontend/dist"));
 
 // CORS middleware
 const allowCrossDomain = (req, res, next) => {
@@ -31,7 +32,7 @@ const allowCrossDomain = (req, res, next) => {
 app.use(allowCrossDomain);
 
 app.get("/", (_req, res) => {
-  res.send("Hello World");
+  res.sendFile(__dirname + "/frontend/dist/index.html");
 });
 
 app.get("/queryTrails", async (req, res) => {

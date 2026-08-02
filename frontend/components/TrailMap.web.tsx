@@ -22,6 +22,8 @@ import {
   WEB_TILE_URL,
 } from "../constants/map";
 
+const API_URL = process.env.EXPO_PUBLIC_API_URL ?? "";
+
 type TrailPolyline = LeafletPolyline & { trailName?: string };
 
 type TrailData = {
@@ -60,7 +62,6 @@ function MapEventHandler({
     nelng: string;
     nelat: string;
   }>();
-  console.log("on load:", params);
 
   const queryTrails = useCallback(() => {
     const bounds = map.getBounds();
@@ -72,12 +73,9 @@ function MapEventHandler({
       nelng: bounds.getEast(),
     });
     fetch(
-      `http://localhost:3000/queryTrails?swlat=${bounds.getSouth()}&swlng=${bounds.getWest()}&nelat=${bounds.getNorth()}&nelng=${bounds.getEast()}`,
+      `${API_URL}/queryTrails?swlat=${bounds.getSouth()}&swlng=${bounds.getWest()}&nelat=${bounds.getNorth()}&nelng=${bounds.getEast()}`,
     )
       .then(async (response) => {
-        if (!response.ok) {
-          console.log(await response.text());
-        }
         return response.json();
       })
       .then((data) => {
@@ -90,10 +88,12 @@ function MapEventHandler({
   }, [map, onMapChange, queryTrails]);
 
   useEffect(() => {
-    map.fitBounds([
-      [+params.swlat, +params.swlng],
-      [+params.nelat, +params.nelng],
-    ]);
+    if (params.swlat && params.swlng && params.nelat && params.nelng) {
+      map.fitBounds([
+        [+params.swlat, +params.swlng],
+        [+params.nelat, +params.nelng],
+      ]);
+    }
   }, [map, params.nelat, params.nelng, params.swlat, params.swlng]);
 
   useMapEvents({
@@ -105,9 +105,6 @@ function MapEventHandler({
     },
     moveend() {
       queryTrails();
-    },
-    movestart() {
-      console.log("movestart");
     },
     zoom() {
       queryTrails();
