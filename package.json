@@ -5,7 +5,7 @@
   "type": "commonjs",
   "scripts": {
     "start": "tsx server.ts",
-    "seed": "tsx scripts/trail-query.ts",
+    "seed": "tsx scripts/seed-trail.ts",
     "frontend": "npm start --prefix frontend",
     "frontend:web": "npm run web --prefix frontend",
     "frontend:android": "npm run android --prefix frontend",
@@ -15,7 +15,8 @@
     "body-parser": "^2.3.0",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
-    "mongoose": "^9.7.3"
+    "mongoose": "^9.7.3",
+    "osmtogeojson": "^3.0.0-beta.5"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.4",

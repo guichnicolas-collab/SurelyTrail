@@ -1,7 +1,11 @@
 import fs from "fs";
+import path from "path";
+import osmtogeojson from "osmtogeojson";
 import dotenv from "dotenv";
 import { connectDb, mongoose } from "../db";
 import { Trail } from "../models/trail";
+
+const CACHE_FILE = path.resolve(__dirname, "osm-cache.json");
 
 dotenv.config();
 
@@ -12,47 +16,86 @@ if (!MONGO_CONNECTION_STRING) {
 
 async function main() {
   await connectDb(MONGO_CONNECTION_STRING);
+  await Trail.deleteMany({});
+  console.log("Cleared existing trails");
 
-  const geojson = JSON.parse(
-    fs.readFileSync("./scripts/saxon-creek-trail.geojson", "utf-8"),
+  let osmData;
+
+  if (fs.existsSync(CACHE_FILE)) {
+    console.log("Loading cached OSM data from", CACHE_FILE);
+    osmData = JSON.parse(fs.readFileSync(CACHE_FILE, "utf-8"));
+  } else {
+    console.log("Fetching trails from Overpass API...");
+    const query = `[out:json][timeout:120];
+(
+  way["highway"="path"]["name"](38.8,-120.1,39.1,-119.8);
+  relation["route"="hiking"]["name"](38.8,-120.1,39.1,-119.8);
+);
+(._;>;);
+out body;`;
+
+    const res = await fetch("https://overpass-api.de/api/interpreter", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+        Accept: "*/*",
+        "User-Agent": "SurelyTrail/1.0",
+      },
+      body: `data=${encodeURIComponent(query)}`,
+    });
+
+    if (!res.ok) {
+      throw new Error(
+        `Overpass API returned ${res.status}: ${await res.text()}`,
+      );
+    }
+
+    osmData = await res.json();
+    fs.writeFileSync(CACHE_FILE, JSON.stringify(osmData));
+    console.log("Cached response to", CACHE_FILE);
+  }
+
+  console.log(`Got ${osmData.elements.length} OSM elements`);
+
+  const geojson = osmtogeojson(osmData);
+  const lineFeatures = geojson.features.filter(
+    (f: { geometry: { type: string } }) => f.geometry.type === "LineString",
   );
+  console.log(`Converting to ${lineFeatures.length} trail(s)...`);
 
-  // First feature is the full trail relation (LineString)
-  const feature = geojson.features[0];
-  const coords = feature.geometry.coordinates;
+  let inserted = 0;
 
-  // Compute bounding box
-  const lngs = coords.map((c: number[]) => c[0]);
-  const lats = coords.map((c: number[]) => c[1]);
-  const bounds = {
-    north: Math.max(...lats),
-    south: Math.min(...lats),
-    east: Math.max(...lngs),
-    west: Math.min(...lngs),
-  };
-
-  const trail = await Trail.create({
-    name: feature.properties.name, // "Tahoe Rim Trail"
-    description:
-      "A steep bike trail in South Lake Tahoe. Also known as 'Mr. Toad's Wild Ride'",
-    difficulty: "hard",
-    distance: 265541,
-    elevationGain: 10000,
-    estimatedTime: 14400,
-    location: feature.geometry, // { type: "LineString", coordinates: [...] }
-    bounds,
-    startPoint: { type: "Point", coordinates: coords[0] },
-    endPoint: { type: "Point", coordinates: coords[coords.length - 1] },
-    tags: ["thru-hike", "tahoe"],
-    source: "openstreetmap",
-  });
-
-  console.log("Created trail:", trail.name, trail._id);
-  console.log(`  ${coords.length} coordinate points`);
-  console.log(
-    `  Bounds: N${bounds.north} S${bounds.south} E${bounds.east} W${bounds.west}`,
+  const MAX_COORDS = 500;
+  const smallTrails = lineFeatures.filter(
+    (f: { geometry: { coordinates: number[][] } }) =>
+      f.geometry.coordinates.length <= MAX_COORDS,
   );
+  console.log(`${smallTrails.length} trails have <= ${MAX_COORDS} coordinates`);
 
+  for (const feature of smallTrails) {
+    const name: string = feature.properties?.name || "Unnamed";
+    const coords = feature.geometry.coordinates;
+    const lngs = coords.map((c: number[]) => c[0]);
+    const lats = coords.map((c: number[]) => c[1]);
+
+    await Trail.create({
+      name,
+      location: feature.geometry,
+      bounds: {
+        north: Math.max(...lats),
+        south: Math.min(...lats),
+        east: Math.max(...lngs),
+        west: Math.min(...lngs),
+      },
+      startPoint: { type: "Point", coordinates: coords[0] },
+      endPoint: { type: "Point", coordinates: coords[coords.length - 1] },
+      source: "openstreetmap",
+    });
+
+    inserted++;
+  }
+
+  console.log(`Done! Inserted ${inserted} trails.`);
   await mongoose.disconnect();
 }
 
