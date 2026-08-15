@@ -1,4 +1,4 @@
-import express from "express";
+import express, { Request, Response, NextFunction } from "express";
 import bodyParser from "body-parser";
 import dotenv from "dotenv";
 import { connectDb } from "./db";
@@ -22,8 +22,7 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static(__dirname + "/frontend/dist"));
 
-// CORS middleware
-const allowCrossDomain = (req, res, next) => {
+const allowCrossDomain = (_req: Request, res: Response, next: NextFunction) => {
   res.header(`Access-Control-Allow-Origin`, `*`);
   res.header(`Access-Control-Allow-Methods`, `GET,PUT,POST,DELETE`);
   res.header(`Access-Control-Allow-Headers`, `Content-Type`);

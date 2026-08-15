@@ -1,6 +1,7 @@
 import fs from "fs";
 import path from "path";
 import osmtogeojson from "osmtogeojson";
+import type { Feature, LineString } from "geojson";
 import dotenv from "dotenv";
 import { connectDb, mongoose } from "../db";
 import { Trail } from "../models/trail";
@@ -13,9 +14,14 @@ const MONGO_CONNECTION_STRING = process.env.MONGO_CONNECTION_STRING;
 if (!MONGO_CONNECTION_STRING) {
   throw new Error("MONGO_CONNECTION_STRING is not set.");
 }
+const mongoUri: string = MONGO_CONNECTION_STRING;
+
+function isLineString(f: Feature): f is Feature<LineString> {
+  return f.geometry.type === "LineString";
+}
 
 async function main() {
-  await connectDb(MONGO_CONNECTION_STRING);
+  await connectDb(mongoUri);
   await Trail.deleteMany({});
   console.log("Cleared existing trails");
 
@@ -58,29 +64,26 @@ out body;`;
   console.log(`Got ${osmData.elements.length} OSM elements`);
 
   const geojson = osmtogeojson(osmData);
-  const lineFeatures = geojson.features.filter(
-    (f: { geometry: { type: string } }) => f.geometry.type === "LineString",
-  );
+  const lineFeatures = geojson.features.filter(isLineString);
   console.log(`Converting to ${lineFeatures.length} trail(s)...`);
 
   let inserted = 0;
 
   const MAX_COORDS = 500;
   const smallTrails = lineFeatures.filter(
-    (f: { geometry: { coordinates: number[][] } }) =>
-      f.geometry.coordinates.length <= MAX_COORDS,
+    (f) => f.geometry.coordinates.length <= MAX_COORDS,
   );
   console.log(`${smallTrails.length} trails have <= ${MAX_COORDS} coordinates`);
 
   for (const feature of smallTrails) {
     const name: string = feature.properties?.name || "Unnamed";
     const coords = feature.geometry.coordinates;
-    const lngs = coords.map((c: number[]) => c[0]);
-    const lats = coords.map((c: number[]) => c[1]);
+    const lngs = coords.map((c) => c[0]);
+    const lats = coords.map((c) => c[1]);
 
     await Trail.create({
       name,
-      location: feature.geometry,
+      location: { type: "LineString", coordinates: coords },
       bounds: {
         north: Math.max(...lats),
         south: Math.min(...lats),
