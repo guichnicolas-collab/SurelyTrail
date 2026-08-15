@@ -10,6 +10,6 @@
     "rootDir": ".",
     "outDir": "dist"
   },
-  "include": ["*.ts", "models/**/*.ts", "scripts/seed-trail.ts"],
+  "include": ["*.ts", "models/**/*.ts", "scripts/**/*.ts"],
   "exclude": ["node_modules", "frontend", "dist"]
 }

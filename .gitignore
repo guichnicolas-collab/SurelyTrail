@@ -41,4 +41,6 @@ yarn-error.*
 /ios
 /android
 
+# trail data files
 *.geojson
+osm-cache.json

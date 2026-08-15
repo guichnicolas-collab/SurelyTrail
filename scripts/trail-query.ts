@@ -8,9 +8,10 @@ const MONGO_CONNECTION_STRING = process.env.MONGO_CONNECTION_STRING;
 if (!MONGO_CONNECTION_STRING) {
   throw new Error("MONGO_CONNECTION_STRING is not set.");
 }
+const mongoUri: string = MONGO_CONNECTION_STRING;
 
 async function main() {
-  await connectDb(MONGO_CONNECTION_STRING);
+  await connectDb(mongoUri);
 
   const searchArea = {
     type: "Polygon",

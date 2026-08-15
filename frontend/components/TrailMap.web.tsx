@@ -1,10 +1,12 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState, useEffect } from "react";
 import { StyleSheet, View } from "react-native";
+import { router, useGlobalSearchParams } from "expo-router";
 import {
   MapContainer,
   Polyline,
   Popup,
   TileLayer,
+  useMap,
   useMapEvents,
 } from "react-leaflet";
 import type { LatLngExpression, Polyline as LeafletPolyline } from "leaflet";
@@ -19,24 +21,96 @@ import {
   WEB_TILE_SUBDOMAINS,
   WEB_TILE_URL,
 } from "../constants/map";
-import trails from "../trails.json";
-import type { TrailCollection } from "../types/geojson";
 
-const geojson = trails as TrailCollection;
+const API_URL = process.env.EXPO_PUBLIC_API_URL ?? "";
 
 type TrailPolyline = LeafletPolyline & { trailName?: string };
+
+type TrailData = {
+  bounds: { north: number; south: number; east: number; west: number };
+  createdAt: string;
+  description: string;
+  difficulty: string;
+  distance: number;
+  elevationGain: number;
+  endPoint: { type: string; coordinates: number[] };
+  estimatedTime: number;
+  location: { type: string; coordinates: [number, number][] };
+  name: string;
+  source: string;
+  startPoint: { type: string; coordinates: number[] };
+  tags: string[];
+  __v: number;
+  _id: string;
+};
 
 function toLeafletPositions(coords: [number, number][]): LatLngExpression[] {
   return coords.map(([lng, lat]) => [lat, lng]);
 }
 
-function PopupCloseHandler({ onDeselect }: { onDeselect: (name: string) => void }) {
+function MapEventHandler({
+  onDeselect,
+  onMapChange,
+}: {
+  onDeselect: (name: string) => void;
+  onMapChange: (data: TrailData[]) => void;
+}) {
+  const map = useMap();
+  const params = useGlobalSearchParams<{
+    swlng: string;
+    swlat: string;
+    nelng: string;
+    nelat: string;
+  }>();
+
+  const queryTrails = useCallback(() => {
+    const bounds = map.getBounds();
+
+    router.setParams({
+      swlat: bounds.getSouth(),
+      swlng: bounds.getWest(),
+      nelat: bounds.getNorth(),
+      nelng: bounds.getEast(),
+    });
+    fetch(
+      `${API_URL}/queryTrails?swlat=${bounds.getSouth()}&swlng=${bounds.getWest()}&nelat=${bounds.getNorth()}&nelng=${bounds.getEast()}`,
+    )
+      .then(async (response) => {
+        return response.json();
+      })
+      .then((data) => {
+        onMapChange(data);
+      });
+  }, [map, onMapChange]);
+
+  useEffect(() => {
+    queryTrails();
+  }, [map, onMapChange, queryTrails]);
+
+  useEffect(() => {
+    if (params.swlat && params.swlng && params.nelat && params.nelng) {
+      map.fitBounds([
+        [+params.swlat, +params.swlng],
+        [+params.nelat, +params.nelng],
+      ]);
+    }
+  }, [map, params.nelat, params.nelng, params.swlat, params.swlng]);
+
   useMapEvents({
     popupclose(event) {
       const source = (event.popup as { _source?: TrailPolyline })._source;
       if (source?.trailName) {
         onDeselect(source.trailName);
       }
+    },
+    moveend() {
+      queryTrails();
+    },
+    zoom() {
+      queryTrails();
+    },
+    resize() {
+      queryTrails();
     },
   });
 
@@ -81,8 +155,8 @@ function TrailLine({ name, positions, isSelected, onSelect }: TrailLineProps) {
 }
 
 export default function TrailMap() {
-  const [mounted, setMounted] = useState(false);
   const [selectedTrail, setSelectedTrail] = useState<string | null>(null);
+  const [trailData, setTrailData] = useState<TrailData[] | null>(null);
 
   const handleSelect = useCallback((name: string) => {
     setSelectedTrail(name);
@@ -92,13 +166,9 @@ export default function TrailMap() {
     setSelectedTrail((current) => (current === name ? null : current));
   }, []);
 
-  useEffect(() => {
-    setMounted(true);
+  const onMapChange = useCallback((data: TrailData[]) => {
+    setTrailData(data);
   }, []);
-
-  if (!mounted) {
-    return <View style={styles.container} />;
-  }
 
   return (
     <View style={styles.container}>
@@ -113,21 +183,22 @@ export default function TrailMap() {
           subdomains={WEB_TILE_SUBDOMAINS}
           maxZoom={19}
         />
-        <PopupCloseHandler onDeselect={handleDeselect} />
-
-        {geojson.features.map((feature, index) => {
-          const name = feature.properties.name;
+        <MapEventHandler
+          onDeselect={handleDeselect}
+          onMapChange={onMapChange}
+        />
+        {trailData?.map((trail, index) => {
+          const name = trail.name;
           return (
             <TrailLine
               key={`${name}-${index}`}
               name={name}
-              positions={toLeafletPositions(feature.geometry.coordinates)}
+              positions={toLeafletPositions(trail.location.coordinates)}
               isSelected={name === selectedTrail}
               onSelect={handleSelect}
             />
           );
         })}
-
       </MapContainer>
     </View>
   );
