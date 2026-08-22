@@ -1,0 +1,12 @@
+.slideInStyle {
+    position: absolute;
+    top: 0;
+    right: 0;
+    height: 100%;
+    width: 320px;
+    z-index: 1000;
+    background-color: white;
+    padding: 24px;
+    box-shadow: -2px 0 8px rgba(0, 0, 0, 0.15);
+    overflow-y: auto;
+}

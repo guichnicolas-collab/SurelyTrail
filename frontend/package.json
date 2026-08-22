@@ -10,6 +10,9 @@
   },
   "dependencies": {
     "@expo/metro-runtime": "~56.0.15",
+    "@fortawesome/fontawesome-svg-core": "^7.3.1",
+    "@fortawesome/free-solid-svg-icons": "^7.3.1",
+    "@fortawesome/react-fontawesome": "^3.5.0",
     "expo": "~56.0.12",
     "expo-constants": "~56.0.21",
     "expo-linking": "~56.0.15",

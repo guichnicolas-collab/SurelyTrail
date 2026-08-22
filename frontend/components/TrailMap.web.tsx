@@ -12,6 +12,7 @@ import {
 import type { LatLngExpression, Polyline as LeafletPolyline } from "leaflet";
 
 import "leaflet/dist/leaflet.css";
+import SlideIn from "./SlideIn";
 
 import {
   SELECTED_TRAIL_COLOR,
@@ -147,9 +148,9 @@ function TrailLine({ name, positions, isSelected, onSelect }: TrailLineProps) {
         click: () => onSelect(name),
       }}
     >
-      <Popup closeOnClick={false} closeOnEscapeKey={false}>
+      {/* <Popup closeOnClick={false} closeOnEscapeKey={false}>
         <strong>{name}</strong>
-      </Popup>
+      </Popup> */}
     </Polyline>
   );
 }
@@ -200,6 +201,7 @@ export default function TrailMap() {
           );
         })}
       </MapContainer>
+      <SlideIn trailName={selectedTrail} onClose={handleDeselect} />
     </View>
   );
 }
