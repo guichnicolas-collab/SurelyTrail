@@ -26,7 +26,7 @@ const API_URL = process.env.EXPO_PUBLIC_API_URL ?? "";
 
 type TrailPolyline = LeafletPolyline & { trailName?: string };
 
-type TrailData = {
+export type TrailData = {
   bounds: { north: number; south: number; east: number; west: number };
   createdAt: string;
   description: string;
