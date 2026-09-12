@@ -15,7 +15,7 @@ function SlideIn(props: propTypes) {
 
   return (
     <View style={styles.container}>
-      <Pressable
+      <Pressable style={styles.closeButton}
         onPress={() => {
           if (!props.trailData){
             return;
@@ -29,7 +29,6 @@ function SlideIn(props: propTypes) {
         <FontAwesomeIcon icon={faXmark} />
       </Pressable>
       <Text style={styles.title}>{props.trailData.name}</Text>
-      <Text>afdafds</Text>
     </View>
   );
 }
@@ -48,8 +47,11 @@ const styles = StyleSheet.create({
     // overflowY: "auto",
   },
   title: {
-    fontSize: 16,
+    fontSize: 24,
     fontWeight: "600",
+  },
+  closeButton: {
+    marginBottom: 16
   }
 })
 
