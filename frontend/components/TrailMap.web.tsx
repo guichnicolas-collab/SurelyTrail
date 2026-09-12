@@ -4,7 +4,6 @@ import { router, useGlobalSearchParams } from "expo-router";
 import {
   MapContainer,
   Polyline,
-  Popup,
   TileLayer,
   useMap,
   useMapEvents,
@@ -27,7 +26,7 @@ const API_URL = process.env.EXPO_PUBLIC_API_URL ?? "";
 
 type TrailPolyline = LeafletPolyline & { trailName?: string };
 
-type TrailData = {
+export type TrailData = {
   bounds: { north: number; south: number; east: number; west: number };
   createdAt: string;
   description: string;
@@ -164,6 +163,9 @@ export default function TrailMap() {
       const result = trailData?.filter((obj) => {
         return obj.name === name;
       });
+      if (!result) {
+        return;
+      }
       setSelectedTrail(result[0]);
     },
     [trailData],

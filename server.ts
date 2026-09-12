@@ -1,3 +1,5 @@
+import path from "path";
+import fs from "fs";
 import express, { Request, Response, NextFunction } from "express";
 import bodyParser from "body-parser";
 import dotenv from "dotenv";
@@ -17,10 +19,13 @@ if (!MONGO_CONNECTION_STRING) {
 
 const mongoUri = MONGO_CONNECTION_STRING;
 
+const frontendDist = path.join(__dirname, "frontend", "dist");
+const frontendIndex = path.join(frontendDist, "index.html");
+
 const app = express();
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
-app.use(express.static(__dirname + "/frontend/dist"));
+app.use(express.static(frontendDist));
 
 const allowCrossDomain = (_req: Request, res: Response, next: NextFunction) => {
   res.header(`Access-Control-Allow-Origin`, `*`);
@@ -31,7 +36,26 @@ const allowCrossDomain = (_req: Request, res: Response, next: NextFunction) => {
 app.use(allowCrossDomain);
 
 app.get("/", (_req, res) => {
-  res.sendFile(__dirname + "/frontend/dist/index.html");
+  if (!fs.existsSync(frontendIndex)) {
+    res.status(503).type("html").send(`<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>SurelyTrail</title>
+  </head>
+  <body>
+    <h1>Frontend is not built</h1>
+    <p>The API is running, but <code>frontend/dist/index.html</code> does not exist.</p>
+    <ul>
+      <li>Development: <code>npm run frontend:web</code></li>
+      <li>Production: <code>npm run frontend:export</code>, then restart this server</li>
+    </ul>
+  </body>
+</html>`);
+    return;
+  }
+
+  res.sendFile(frontendIndex);
 });
 
 app.get("/queryTrails", async (req, res) => {
