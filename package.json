@@ -8,6 +8,7 @@
     "seed": "tsx scripts/seed-trail.ts",
     "frontend": "npm start --prefix frontend",
     "frontend:web": "npm run web --prefix frontend",
+    "frontend:export": "npm run export --prefix frontend",
     "frontend:android": "npm run android --prefix frontend",
     "frontend:ios": "npm run ios --prefix frontend"
   },

@@ -1,6 +1,5 @@
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faXmark } from "@fortawesome/free-solid-svg-icons";
-import TrailData from "./TrailMap.web";
 import SlideInCss from "./SlideIn.module.css";
 
 type propTypes = {

@@ -4,7 +4,6 @@ import { router, useGlobalSearchParams } from "expo-router";
 import {
   MapContainer,
   Polyline,
-  Popup,
   TileLayer,
   useMap,
   useMapEvents,
@@ -164,6 +163,9 @@ export default function TrailMap() {
       const result = trailData?.filter((obj) => {
         return obj.name === name;
       });
+      if (!result) {
+        return;
+      }
       setSelectedTrail(result[0]);
     },
     [trailData],
