@@ -4,7 +4,8 @@
   "main": "server.ts",
   "type": "commonjs",
   "scripts": {
-    "start": "tsx server.ts",
+    "start": "concurrently \"tsx server.ts\" \"npm run frontend:web\"",
+    "start:api": "tsx server.ts",
     "seed": "tsx scripts/seed-trail.ts",
     "frontend": "npm start --prefix frontend",
     "frontend:web": "npm run web --prefix frontend",
@@ -24,6 +25,7 @@
     "@types/express": "^5.0.3",
     "@types/node": "^24.3.0",
     "@typescript-eslint/parser": "^8.62.1",
+    "concurrently": "^10.0.5",
     "eslint": "^9.39.4",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-react": "^7.37.5",
