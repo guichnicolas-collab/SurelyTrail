@@ -9,28 +9,29 @@ type propTypes = {
 };
 
 function SlideIn(props: propTypes) {
-  if (!props.trailData) {
+  if (props.trailData) {
+    return (
+      <View style={styles.container}>
+        <Pressable
+          style={styles.closeButton}
+          onPress={() => {
+            if (!props.trailData) {
+              return;
+            }
+
+            if (props.trailData.name) {
+              props.onClose(props.trailData.name);
+            }
+          }}
+        >
+          <FontAwesomeIcon icon={faXmark} />
+        </Pressable>
+        <Text style={styles.title}>{props.trailData.name}</Text>
+      </View>
+    );
+  } else {
     return null;
   }
-
-  return (
-    <View style={styles.container}>
-      <Pressable style={styles.closeButton}
-        onPress={() => {
-          if (!props.trailData){
-            return;
-          }
-
-          if (props.trailData.name){
-              props.onClose(props.trailData.name);
-          }
-        }}
-      >
-        <FontAwesomeIcon icon={faXmark} />
-      </Pressable>
-      <Text style={styles.title}>{props.trailData.name}</Text>
-    </View>
-  );
 }
 
 const styles = StyleSheet.create({
@@ -51,8 +52,8 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   closeButton: {
-    marginBottom: 16
-  }
-})
+    marginBottom: 16,
+  },
+});
 
 export default SlideIn;

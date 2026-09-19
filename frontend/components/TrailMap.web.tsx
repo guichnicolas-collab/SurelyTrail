@@ -1,4 +1,4 @@
-import { useCallback, useState, useEffect } from "react";
+import { useCallback, useRef, useState, useEffect } from "react";
 import { StyleSheet, View } from "react-native";
 import { router, useGlobalSearchParams } from "expo-router";
 import {
@@ -18,7 +18,6 @@ import {
   SELECTED_TRAIL_WIDTH,
   TRAIL_COLOR,
   TRAIL_WIDTH,
-  WEB_TILE_SUBDOMAINS,
   WEB_TILE_URL,
 } from "../constants/map";
 
@@ -63,15 +62,20 @@ function MapEventHandler({
     nelat: string;
   }>();
 
+  const hasMounted = useRef(false);
+
   const queryTrails = useCallback(() => {
     const bounds = map.getBounds();
 
-    router.setParams({
-      swlat: bounds.getSouth(),
-      swlng: bounds.getWest(),
-      nelat: bounds.getNorth(),
-      nelng: bounds.getEast(),
-    });
+    if (hasMounted.current) {
+      router.setParams({
+        swlat: bounds.getSouth(),
+        swlng: bounds.getWest(),
+        nelat: bounds.getNorth(),
+        nelng: bounds.getEast(),
+      });
+    }
+
     fetch(
       `${API_URL}/queryTrails?swlat=${bounds.getSouth()}&swlng=${bounds.getWest()}&nelat=${bounds.getNorth()}&nelng=${bounds.getEast()}`,
     )
@@ -85,6 +89,7 @@ function MapEventHandler({
 
   useEffect(() => {
     queryTrails();
+    hasMounted.current = true;
   }, [map, onMapChange, queryTrails]);
 
   useEffect(() => {
@@ -155,29 +160,34 @@ function TrailLine({ name, positions, isSelected, onSelect }: TrailLineProps) {
 }
 
 export default function TrailMap() {
-  const [selectedTrail, setSelectedTrail] = useState<TrailData | null>(null);
   const [trailData, setTrailData] = useState<TrailData[] | null>(null);
+  const params = useGlobalSearchParams<{ trail?: string }>();
+  const [selectedTrail, setSelectedTrail] = useState<TrailData | null>(() => {
+    return trailData?.find((t) => t.name === params.trail) ?? null;
+  });
 
   const handleSelect = useCallback(
     (name: string) => {
-      const result = trailData?.filter((obj) => {
-        return obj.name === name;
-      });
-      if (!result) {
-        return;
-      }
-      setSelectedTrail(result[0]);
+      const match = trailData?.find((t) => t.name === name);
+      if (!match) return;
+      setSelectedTrail(match);
+      router.setParams({ trail: name });
     },
     [trailData],
   );
 
-  const handleDeselect = useCallback((name: string) => {
-    setSelectedTrail((current) => (current?.name === name ? null : current));
+  const handleDeselect = useCallback((_name: string) => {
+    setSelectedTrail(null);
+    router.setParams({ trail: undefined });
   }, []);
 
-  const onMapChange = useCallback((data: TrailData[]) => {
-    setTrailData(data);
-  }, []);
+  const onMapChange = useCallback(
+    (data: TrailData[]) => {
+      setTrailData(data);
+      setSelectedTrail(data?.find((t) => t.name === params.trail) ?? null);
+    },
+    [params.trail],
+  );
 
   return (
     <View style={styles.container}>
@@ -189,7 +199,6 @@ export default function TrailMap() {
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           url={WEB_TILE_URL}
-          subdomains={WEB_TILE_SUBDOMAINS}
           maxZoom={19}
         />
         <MapEventHandler
