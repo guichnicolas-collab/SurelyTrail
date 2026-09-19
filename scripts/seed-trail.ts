@@ -78,9 +78,15 @@ async function main() {
   let unnamedId = 1;
   for (const feature of lineFeatures) {
     const name: string = feature.properties?.name || "Unnamed" + unnamedId++;
-    const coords = feature.geometry.coordinates;
+
+    const coords: [number, number][] = feature.geometry.coordinates.map(
+      ([lng, lat]) => [lng, lat],
+    );
+
     const lngs = coords.map((c) => c[0]);
     const lats = coords.map((c) => c[1]);
+
+    const distance = calculateDistance(coords);
 
     await Trail.create({
       name,
@@ -91,6 +97,7 @@ async function main() {
         east: Math.max(...lngs),
         west: Math.min(...lngs),
       },
+      distance,
       startPoint: { type: "Point", coordinates: coords[0] },
       endPoint: { type: "Point", coordinates: coords[coords.length - 1] },
       source: "openstreetmap",
@@ -101,6 +108,31 @@ async function main() {
 
   console.log(`Done! Inserted ${inserted} trails.`);
   await mongoose.disconnect();
+}
+
+function calculateDistance(coordinates: [number, number][]): number {
+  const R = 6371000; // Earth radius in meters
+  let distance = 0;
+
+  for (let i = 1; i < coordinates.length; i++) {
+    const [lon1, lat1] = coordinates[i - 1];
+    const [lon2, lat2] = coordinates[i];
+
+    const dLat = ((lat2 - lat1) * Math.PI) / 180;
+    const dLon = ((lon2 - lon1) * Math.PI) / 180;
+
+    const a =
+      Math.sin(dLat / 2) ** 2 +
+      Math.cos((lat1 * Math.PI) / 180) *
+        Math.cos((lat2 * Math.PI) / 180) *
+        Math.sin(dLon / 2) ** 2;
+
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+    distance += R * c;
+  }
+
+  return distance;
 }
 
 main();
