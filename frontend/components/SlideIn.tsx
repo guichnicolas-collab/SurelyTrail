@@ -1,15 +1,17 @@
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faXmark, faClipboard } from "@fortawesome/free-solid-svg-icons";
 import type { TrailData } from "./TrailMap.web";
-import { StyleSheet, View, Pressable, Text } from "react-native";
+import { StyleSheet, View, Pressable, Text, ScrollView } from "react-native";
 
 type propTypes = {
-  trailData: TrailData | null;
-  onClose: (name: string) => void;
+  selectedTrail: TrailData | null;
+  displayedTrails: TrailData[] | null;
+  handleDeselect: (name: string) => void;
+  handleSelect: (name: string) => void;
 };
 
 function SlideIn(props: propTypes) {
-  if (!props.trailData) {
+  if (!props.displayedTrails) {
     return null;
   }
 
@@ -39,33 +41,50 @@ function SlideIn(props: propTypes) {
 
     return description;
   };
-
-  return (
-    <View style={styles.container}>
-      <View style={styles.topRow}>
-        <Pressable
-          onPress={() => {
-            if (props.trailData?.name) {
-              props.onClose(props.trailData.name);
-            }
-          }}
-        >
-          <FontAwesomeIcon icon={faXmark} />
-        </Pressable>
-        <Pressable
-          onPress={() => {
-            navigator.clipboard.writeText(window.location.href);
-          }}
-        >
-          <FontAwesomeIcon icon={faClipboard} />
-        </Pressable>
+  if (props.selectedTrail) {
+    return (
+      <View style={styles.container}>
+        <View style={styles.topRow}>
+          <Pressable
+            onPress={() => {
+              if (props.selectedTrail?.name) {
+                props.handleDeselect(props.selectedTrail.name);
+              }
+            }}
+          >
+            <FontAwesomeIcon icon={faXmark} />
+          </Pressable>
+          <Pressable
+            onPress={() => {
+              navigator.clipboard.writeText(window.location.href);
+            }}
+          >
+            <FontAwesomeIcon icon={faClipboard} />
+          </Pressable>
+        </View>
+        <Text style={styles.title}>{props.selectedTrail.name}</Text>
+        <Text style={styles.description}>
+          {generateDescription(props.selectedTrail) || "no description"}
+        </Text>
       </View>
-      <Text style={styles.title}>{props.trailData.name}</Text>
-      <Text style={styles.description}>
-        {generateDescription(props.trailData) || "no description"}
-      </Text>
-    </View>
-  );
+    );
+  } else {
+    return (
+      <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+        {props.displayedTrails.map((trail) => (
+          <Pressable
+            key={trail._id}
+            style={styles.shownTrailContainer}
+            onPress={() => {
+              props.handleSelect(trail.name);
+            }}
+          >
+            <Text>{trail.name}</Text>
+          </Pressable>
+        ))}
+      </ScrollView>
+    );
+  }
 }
 
 const styles = StyleSheet.create({
@@ -82,6 +101,13 @@ const styles = StyleSheet.create({
     padding: 24,
     boxShadow: "-2px 0 8px rgba(0, 0, 0, 0.15)",
     // overflowY: "auto",
+  },
+  shownTrailContainer: {
+    borderColor: "lightgrey",
+    padding: 8,
+    borderWidth: 1,
+    borderRadius: 3,
+    marginBottom: 8,
   },
   title: {
     fontSize: 24,

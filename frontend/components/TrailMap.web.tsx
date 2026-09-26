@@ -213,7 +213,7 @@ export default function TrailMap() {
           );
         })}
       </MapContainer>
-      <SlideIn trailData={selectedTrail} onClose={handleDeselect} />
+      <SlideIn selectedTrail={selectedTrail} displayedTrails={trailData} handleDeselect={handleDeselect} handleSelect={handleSelect} />
     </View>
   );
 }
