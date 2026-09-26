@@ -1,7 +1,15 @@
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faXmark, faClipboard } from "@fortawesome/free-solid-svg-icons";
+import { useState } from "react";
 import type { TrailData } from "./TrailMap.web";
-import { StyleSheet, View, Pressable, Text, ScrollView } from "react-native";
+import {
+  StyleSheet,
+  View,
+  Pressable,
+  Text,
+  ScrollView,
+  TextInput,
+} from "react-native";
 
 type propTypes = {
   selectedTrail: TrailData | null;
@@ -11,6 +19,9 @@ type propTypes = {
 };
 
 function SlideIn(props: propTypes) {
+
+  const [searchTerm, setSearchTerm] = useState("");
+
   if (!props.displayedTrails) {
     return null;
   }
@@ -41,6 +52,13 @@ function SlideIn(props: propTypes) {
 
     return description;
   };
+  
+  const filterTrails = (searchTerm: string, trails: TrailData[]) => {
+    return trails.filter((trail) => {
+      return trail.name.toLowerCase().includes(searchTerm.toLowerCase());
+    });
+  }
+
   if (props.selectedTrail) {
     return (
       <View style={styles.container}>
@@ -68,10 +86,14 @@ function SlideIn(props: propTypes) {
         </Text>
       </View>
     );
-  } else {
-    return (
-      <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-        {props.displayedTrails.map((trail) => (
+  }
+  return (
+    <View style={styles.container}>
+      <Text style={styles.title}>Trails</Text>
+      <TextInput placeholder="Search" style={styles.searchBar} value={searchTerm} onChangeText={setSearchTerm}></TextInput>
+      {props.displayedTrails.length === 0 && <Text>No trails found</Text>}
+      <ScrollView showsVerticalScrollIndicator={false}>
+        {filterTrails(searchTerm, props.displayedTrails).map((trail) => (
           <Pressable
             key={trail._id}
             style={styles.shownTrailContainer}
@@ -83,8 +105,8 @@ function SlideIn(props: propTypes) {
           </Pressable>
         ))}
       </ScrollView>
-    );
-  }
+    </View>
+  );
 }
 
 const styles = StyleSheet.create({
@@ -120,6 +142,15 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     marginBottom: 16,
+  },
+  searchBar: {
+    height: 40,
+    marginVertical: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderWidth: 1,
+    borderColor: "lightgrey",
+    borderRadius: 4,
   },
 });
 

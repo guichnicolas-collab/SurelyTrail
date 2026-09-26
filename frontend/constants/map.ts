@@ -8,7 +8,7 @@ export const INITIAL_REGION = {
 export const TRAIL_COLOR = "#1d3557";
 export const SELECTED_TRAIL_COLOR = "#e63946";
 export const TRAIL_WIDTH = 3;
-export const SELECTED_TRAIL_WIDTH = 3;
+export const SELECTED_TRAIL_WIDTH = 6;
 
 export const WEB_TILE_URL = "https://tile.openstreetmap.org/{z}/{x}/{y}.png";
 
