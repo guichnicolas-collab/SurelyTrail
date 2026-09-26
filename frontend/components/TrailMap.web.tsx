@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState, useEffect } from "react";
+import { useCallback, useState, useEffect } from "react";
 import { StyleSheet, View } from "react-native";
 import { router, useGlobalSearchParams } from "expo-router";
 import {
@@ -62,19 +62,15 @@ function MapEventHandler({
     nelat: string;
   }>();
 
-  const hasMounted = useRef(false);
-
   const queryTrails = useCallback(() => {
     const bounds = map.getBounds();
 
-    if (hasMounted.current) {
-      router.setParams({
-        swlat: bounds.getSouth(),
-        swlng: bounds.getWest(),
-        nelat: bounds.getNorth(),
-        nelng: bounds.getEast(),
-      });
-    }
+    router.setParams({
+      swlat: bounds.getSouth(),
+      swlng: bounds.getWest(),
+      nelat: bounds.getNorth(),
+      nelng: bounds.getEast(),
+    });
 
     fetch(
       `${API_URL}/queryTrails?swlat=${bounds.getSouth()}&swlng=${bounds.getWest()}&nelat=${bounds.getNorth()}&nelng=${bounds.getEast()}`,
@@ -89,7 +85,6 @@ function MapEventHandler({
 
   useEffect(() => {
     queryTrails();
-    hasMounted.current = true;
   }, [map, onMapChange, queryTrails]);
 
   useEffect(() => {

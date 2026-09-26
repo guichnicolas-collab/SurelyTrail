@@ -42,40 +42,28 @@ function SlideIn(props: propTypes) {
 
   return (
     <View style={styles.container}>
-      <Pressable
-        style={styles.closeButton}
-        onPress={() => {
-          if (!props.trailData) {
-            return;
-          }
-
-          if (props.trailData.name) {
-            props.onClose(props.trailData.name);
-          }
-        }}
-      >
-        <FontAwesomeIcon icon={faXmark} />
-      </Pressable>
+      <View style={styles.topRow}>
+        <Pressable
+          onPress={() => {
+            if (props.trailData?.name) {
+              props.onClose(props.trailData.name);
+            }
+          }}
+        >
+          <FontAwesomeIcon icon={faXmark} />
+        </Pressable>
+        <Pressable
+          onPress={() => {
+            navigator.clipboard.writeText(window.location.href);
+          }}
+        >
+          <FontAwesomeIcon icon={faClipboard} />
+        </Pressable>
+      </View>
       <Text style={styles.title}>{props.trailData.name}</Text>
       <Text style={styles.description}>
-        {generateDescription(props.trailData)
-          ? generateDescription(props.trailData)
-          : "no description"}
+        {generateDescription(props.trailData) || "no description"}
       </Text>
-      <Pressable
-        style={styles.copyButton}
-        onPress={() => {
-          const dummy = document.createElement("input");
-          const text = window.location.href;
-          document.body.appendChild(dummy);
-          dummy.value = text;
-          dummy.select();
-          document.execCommand("copy");
-          document.body.removeChild(dummy);
-        }}
-      >
-        <FontAwesomeIcon icon={faClipboard} />
-      </Pressable>
     </View>
   );
 }
@@ -86,7 +74,7 @@ const styles = StyleSheet.create({
     position: "absolute",
     borderRadius: 20,
     top: 0,
-    left: 0,
+    right: 0,
     height: "100%",
     width: 320,
     zIndex: 1000,
@@ -102,11 +90,10 @@ const styles = StyleSheet.create({
   description: {
     marginTop: 16,
   },
-  closeButton: {
+  topRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
     marginBottom: 16,
-  },
-  copyButton: {
-    marginTop: 16,
   },
 });
 
