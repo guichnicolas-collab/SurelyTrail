@@ -184,6 +184,25 @@ export default function TrailMap() {
     [params.trail],
   );
 
+  const center = useCallback(() => {
+    const centerPoint: [number, number] | undefined =
+      selectedTrail?.location.coordinates[
+        Math.floor(selectedTrail.location.coordinates.length / 2)
+      ];
+    if (centerPoint) {
+      const west = centerPoint[0] - 0.0125;
+      const east = centerPoint[0] + 0.0125;
+      const north = centerPoint[1] + 0.0375;
+      const south = centerPoint[1] - 0.0375;
+      router.setParams({
+        swlat: south,
+        swlng: west,
+        nelat: north,
+        nelng: east,
+      });
+    }
+  }, [selectedTrail]);
+
   return (
     <View style={styles.container}>
       <MapContainer
@@ -213,7 +232,13 @@ export default function TrailMap() {
           );
         })}
       </MapContainer>
-      <SlideIn selectedTrail={selectedTrail} displayedTrails={trailData} handleDeselect={handleDeselect} handleSelect={handleSelect} />
+      <SlideIn
+        selectedTrail={selectedTrail}
+        displayedTrails={trailData}
+        handleDeselect={handleDeselect}
+        handleSelect={handleSelect}
+        center={center}
+      />
     </View>
   );
 }

@@ -1,6 +1,10 @@
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faXmark, faClipboard } from "@fortawesome/free-solid-svg-icons";
 import { useState } from "react";
+import {
+  faXmark,
+  faClipboard,
+  faArrowsToCircle,
+} from "@fortawesome/free-solid-svg-icons";
 import type { TrailData } from "./TrailMap.web";
 import {
   StyleSheet,
@@ -16,10 +20,10 @@ type propTypes = {
   displayedTrails: TrailData[] | null;
   handleDeselect: (name: string) => void;
   handleSelect: (name: string) => void;
+  center: () => void;
 };
 
 function SlideIn(props: propTypes) {
-
   const [searchTerm, setSearchTerm] = useState("");
 
   if (!props.displayedTrails) {
@@ -52,12 +56,12 @@ function SlideIn(props: propTypes) {
 
     return description;
   };
-  
+
   const filterTrails = (searchTerm: string, trails: TrailData[]) => {
     return trails.filter((trail) => {
       return trail.name.toLowerCase().includes(searchTerm.toLowerCase());
     });
-  }
+  };
 
   if (props.selectedTrail) {
     return (
@@ -71,6 +75,9 @@ function SlideIn(props: propTypes) {
             }}
           >
             <FontAwesomeIcon icon={faXmark} />
+          </Pressable>
+          <Pressable onPress={props.center}>
+            <FontAwesomeIcon icon={faArrowsToCircle} />
           </Pressable>
           <Pressable
             onPress={() => {
@@ -90,7 +97,12 @@ function SlideIn(props: propTypes) {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Trails</Text>
-      <TextInput placeholder="Search" style={styles.searchBar} value={searchTerm} onChangeText={setSearchTerm}></TextInput>
+      <TextInput
+        placeholder="Search"
+        style={styles.searchBar}
+        value={searchTerm}
+        onChangeText={setSearchTerm}
+      ></TextInput>
       {props.displayedTrails.length === 0 && <Text>No trails found</Text>}
       <ScrollView showsVerticalScrollIndicator={false}>
         {filterTrails(searchTerm, props.displayedTrails).map((trail) => (
