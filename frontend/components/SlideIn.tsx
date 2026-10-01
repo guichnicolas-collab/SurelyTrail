@@ -18,8 +18,8 @@ import {
 type propTypes = {
   selectedTrail: TrailData | null;
   displayedTrails: TrailData[] | null;
-  handleDeselect: (name: string) => void;
-  handleSelect: (name: string) => void;
+  handleDeselect: (id: string) => void;
+  handleSelect: (id: string) => void;
   center: () => void;
 };
 
@@ -69,8 +69,8 @@ function SlideIn(props: propTypes) {
         <View style={styles.topRow}>
           <Pressable
             onPress={() => {
-              if (props.selectedTrail?.name) {
-                props.handleDeselect(props.selectedTrail.name);
+              if (props.selectedTrail?._id) {
+                props.handleDeselect(props.selectedTrail._id);
               }
             }}
           >
@@ -110,7 +110,7 @@ function SlideIn(props: propTypes) {
             key={trail._id}
             style={styles.shownTrailContainer}
             onPress={() => {
-              props.handleSelect(trail.name);
+              props.handleSelect(trail._id);
             }}
           >
             <Text>{trail.name}</Text>

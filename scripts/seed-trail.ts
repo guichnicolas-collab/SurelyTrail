@@ -75,9 +75,14 @@ async function main() {
 
   let inserted = 0;
   console.log(`Ingesting ${lineFeatures.length} trails`);
-  let unnamedId = 1;
+
   for (const feature of lineFeatures) {
-    const name: string = feature.properties?.name || "Unnamed" + unnamedId++;
+
+    if (feature.properties?.name === undefined) {
+      continue;
+    }
+    
+    const name: string = feature.properties?.name;
 
     const coords: [number, number][] = feature.geometry.coordinates.map(
       ([lng, lat]) => [lng, lat],

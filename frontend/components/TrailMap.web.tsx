@@ -158,20 +158,20 @@ export default function TrailMap() {
   const [trailData, setTrailData] = useState<TrailData[] | null>(null);
   const params = useGlobalSearchParams<{ trail?: string }>();
   const [selectedTrail, setSelectedTrail] = useState<TrailData | null>(() => {
-    return trailData?.find((t) => t.name === params.trail) ?? null;
+    return trailData?.find((t) => t._id === params.trail) ?? null;
   });
 
   const handleSelect = useCallback(
-    (name: string) => {
-      const match = trailData?.find((t) => t.name === name);
+    (id: string) => {
+      const match = trailData?.find((t) => t._id === id);
       if (!match) return;
       setSelectedTrail(match);
-      router.setParams({ trail: name });
+      router.setParams({ trail: id });
     },
     [trailData],
   );
 
-  const handleDeselect = useCallback((_name: string) => {
+  const handleDeselect = useCallback((_id: string) => {
     setSelectedTrail(null);
     router.setParams({ trail: undefined });
   }, []);
@@ -179,7 +179,7 @@ export default function TrailMap() {
   const onMapChange = useCallback(
     (data: TrailData[]) => {
       setTrailData(data);
-      setSelectedTrail(data?.find((t) => t.name === params.trail) ?? null);
+      setSelectedTrail(data?.find((t) => t._id === params.trail) ?? null);
     },
     [params.trail],
   );
@@ -219,14 +219,14 @@ export default function TrailMap() {
           onDeselect={handleDeselect}
           onMapChange={onMapChange}
         />
-        {trailData?.map((trail, index) => {
-          const name = trail.name;
+        {trailData?.map((trail) => {
+          const id = trail._id;
           return (
             <TrailLine
-              key={`${name}-${index}`}
-              name={name}
+              key={id}
+              name={id}
               positions={toLeafletPositions(trail.location.coordinates)}
-              isSelected={name === selectedTrail?.name}
+              isSelected={id === selectedTrail?._id}
               onSelect={handleSelect}
             />
           );
